@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-func EnviarAvisoAtraso() {
+func EnviarAviso() {
 	whatsapp := os.Args[1]
 	nome := os.Args[2]
 	valorPagar := os.Args[3]
@@ -30,7 +30,7 @@ func EnviarAvisoAtraso() {
 		"to":                whatsapp,
 		"type":              "template",
 		"template": map[string]interface{}{
-			"name": "avisa_vencimento_v2",
+			"name": "avisa_vencimento_v3",
 			"language": map[string]string{
 				"code": "pt_BR",
 			},
@@ -85,11 +85,7 @@ func EnviarAvisoAtraso() {
 }
 
 func main() {
-	if len(os.Args) != 5 {
-		fmt.Println("Parametros insulficiente")
-		return
-	}
 
-	EnviarAvisoAtraso()
+	EnviarAviso()
 
 }

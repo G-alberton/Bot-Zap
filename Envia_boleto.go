@@ -28,8 +28,14 @@ func UploadArquivo(caminho string, phoneNumberID string, acessToken string) stri
 	body := &bytes.Buffer{}
 	write := multipart.newWriter(body)
 
-	part, err := write.CreateFormFile("File", "boleto.pdf")
-	if err != nil{
+	dataVencimento = string.ReplaceAll(dataVencimento, "/", '-')
+	filename := fmt.Sprintf("boleto_%s.pdf", dataVencimento)
+	header := make(textproto.MIMEHeader)
+	header.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, filename))
+	header.Set("Content-type", "application/pdf")
+
+	part, err := write.CreatePart(header)
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -62,22 +68,34 @@ func UploadArquivo(caminho string, phoneNumberID string, acessToken string) stri
 	fmt.Println("Upload responde:", string(resBody))
 
 	var result map[string]interface{}
-	json.Unmarshal(resBody, &result)
+	
+	
+	err = json.Unmarshal(resBody, &result)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	mediaID := result["id"].(string)
+	mediaID, ok := result["id"].(string)
+	if !ok {
+		log.Fatal("Erro ao obter MediaID")
+	}
 
 	fmt.Println("MediaID:", mediaID)
 
 	return mediaID
 }
 
-func EnviaBoleto() {
+func EnviarAviso() {
 	whatsapp := os.Args[1]
 	nome := os.Args[2]
 	valorPagar := os.Args[3]
 	dataVencimento := os.Args[4]
+	caminhoPDF := os.Args[5]
 	phoneNumberID := //ID do numero que utilizara na API (Deve ser numero virgem) 
 	acessToken := //Token de acesso da API
+	mediaID := UploadArquivo(caminhoPDF, phoneNumberID, acessToken, dataVencimento)
+	dataVencimentoFormat := strings.ReplaceAll(dataVencimento, "/", "-")
+	filename := fmt.Sprintf("boleto_%s.pdf", dataVencimentoFormat)
 
 	fmt.Println("Nr. WhatsApp:", whatsapp)
 	fmt.Println("Cliente.....:", nome)
@@ -87,7 +105,7 @@ func EnviaBoleto() {
 		"to":                whatsapp,
 		"type":              "template",
 		"templete": map[string]interface{}{
-			"name": "manda_boleto_v2",
+			"name": "manda_boleto",
 			"language": map[string]string{
 				"code": "pt_BR",
 			},
@@ -99,7 +117,7 @@ func EnviaBoleto() {
 							"type": "document",
 							"document": map[string]string{
 								"id": mediaID,
-								"filename": "boleto.pdf",
+								"filename": filename,
 							},
 						},
 					},
@@ -148,24 +166,12 @@ func EnviaBoleto() {
 		log.Fatal(err)
 	}
 	defer arquivo.Close()
+
+	fmt.Fprintln(arquivo, "Status:", resp.StatusCode)
+	fmt.Fprintln(arquivo, "Resposta", string(body))
 }
 
 func main() {
-	if len(os.Args) != 6 {
-		fmt.Println("Parametro insulficientes")
-		fmt.Println("Uso:")
-		fmt.Println("go run Enviar_boleto.go telefone nome valor vencimento mediaID")
-		return
-	}
 
-	caminhoPDF := os.Args[5]
-
-	phoneNumberID := //ID do numero que utilizara na API (Deve ser numero virgem)
-	acessToken := //Token de acesso da API
-
-	fmt.Println("Lendo arquivo:" caminhoPDF)
-
-	mediaID := UploadArquivo(caminhoPDF, phoneNumberID, acessToken)
-
-	EnviaBoleto()
+	EnviarAviso()
 }

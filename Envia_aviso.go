@@ -30,7 +30,7 @@ func EnviarAviso() {
 		"to":                whatsapp,
 		"type":              "template",
 		"template": map[string]interface{}{
-			"name": "primeiro_contato",
+			"name": "primeiro_contato_v2",
 			"language": map[string]string{
 				"code": "pt_BR",
 			},
@@ -85,10 +85,6 @@ func EnviarAviso() {
 }
 
 func main() {
-	if len(os.Args) != 5 {
-		fmt.Println("Parametros insulficiente")
-		return
-	}
 
 	EnviarAviso()
 
